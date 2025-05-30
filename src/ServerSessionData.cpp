@@ -3,12 +3,12 @@
 #include <string>
 
 
-Network::ServerSessionData::ServerSessionData()
+net::ServerSessionData::ServerSessionData()
 {
 	id = -1;
 }
 
-Network::ServerSessionData::ServerSessionData(int id, std::string request, std::string response)
+net::ServerSessionData::ServerSessionData(int id, std::string request, std::string response)
 {
 	this->id = id;
 	this->request = request;
@@ -16,17 +16,17 @@ Network::ServerSessionData::ServerSessionData(int id, std::string request, std::
 }
 
 
-int Network::ServerSessionData::getId()
+int net::ServerSessionData::getId()
 {
 	return id;
 }
 
-std::string Network::ServerSessionData::getRequest()
+std::string net::ServerSessionData::getRequest()
 {
 	return request;
 }
 
-std::string Network::ServerSessionData::getResponse()
+std::string net::ServerSessionData::getResponse()
 {
 	return response;
 }

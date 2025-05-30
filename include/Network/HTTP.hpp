@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 
-namespace Network
+namespace net
 {
 	class HTTP
 	{

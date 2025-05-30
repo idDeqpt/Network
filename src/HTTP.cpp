@@ -4,12 +4,12 @@
 #include <unordered_map>
 
 
-Network::HTTP::HTTP()
+net::HTTP::HTTP()
 {
 	body = "";
 }
 
-Network::HTTP::HTTP(std::string message)
+net::HTTP::HTTP(std::string message)
 {
 	start_line = {
 		{"0", ""},
@@ -42,7 +42,7 @@ Network::HTTP::HTTP(std::string message)
 	body = (body_pos != std::string::npos) ? message.substr(body_pos, message.length() - body_pos) : "";
 }
 
-std::string Network::HTTP::toString()
+std::string net::HTTP::toString()
 {
 	std::string message = "";
 	for (auto&[key, value] : start_line)
@@ -56,12 +56,12 @@ std::string Network::HTTP::toString()
 
 
 
-Network::HTTPRequest::HTTPRequest() : HTTP()
+net::HTTPRequest::HTTPRequest() : HTTP()
 {
 
 }
 
-Network::HTTPRequest::HTTPRequest(std::string request) : HTTP(request)
+net::HTTPRequest::HTTPRequest(std::string request) : HTTP(request)
 {
 	start_line["method"] = start_line["0"];
 	start_line.erase("0");
@@ -73,12 +73,12 @@ Network::HTTPRequest::HTTPRequest(std::string request) : HTTP(request)
 
 
 
-Network::HTTPResponse::HTTPResponse() : HTTP()
+net::HTTPResponse::HTTPResponse() : HTTP()
 {
 	
 }
 
-Network::HTTPResponse::HTTPResponse(std::string response) : HTTP(response)
+net::HTTPResponse::HTTPResponse(std::string response) : HTTP(response)
 {
 	start_line["http-version"] = start_line["0"];
 	start_line.erase("0");

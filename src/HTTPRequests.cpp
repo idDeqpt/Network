@@ -8,12 +8,12 @@
 #include "Network/TCPClient.hpp"
 
 
-std::string Network::Requests::get(std::string url)
+std::string net::Requests::get(std::string url)
 {
-	return Network::Requests::get(Network::URL(url)).toString();
+	return net::Requests::get(net::URL(url)).toString();
 }
 
-Network::HTTPResponse Network::Requests::get(Network::URL url)
+net::HTTPResponse net::Requests::get(net::URL url)
 {
 	//std::cout << url.toString() << std::endl;
 	HTTPRequest request;
@@ -40,7 +40,7 @@ Network::HTTPResponse Network::Requests::get(Network::URL url)
 
 	//std::cout << "|" << request.toString() << "|\n";
 
-	Network::TCPClient client;
+	net::TCPClient client;
 	client.connect(request.headers["Host"], 80);//((url.getScheme() == "http") ? 80 : 443));
 	client.send(request.toString());
 	return client.recv();

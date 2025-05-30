@@ -7,7 +7,7 @@
 #include "HTTP.hpp"
 
 
-namespace Network
+namespace net
 {
 	namespace Requests
 	{

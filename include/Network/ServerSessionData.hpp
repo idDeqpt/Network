@@ -4,7 +4,7 @@
 #include <string>
 
 
-namespace Network
+namespace net
 {
 	class ServerSessionData
 	{

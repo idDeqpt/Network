@@ -8,7 +8,7 @@
 #include "Address.hpp"
 
 
-namespace Network
+namespace net
 {
 	class URI
 	{

@@ -12,7 +12,7 @@
 #include "Network/URL.hpp"
 
 
-Network::HTTPResponse Network::default_404_handler()
+net::HTTPResponse net::default_404_handler()
 {
     HTTPResponse response;
 
@@ -32,40 +32,40 @@ Network::HTTPResponse Network::default_404_handler()
 
 
 
-Network::HTTPServer::HTTPServer() : TCPServer()
+net::HTTPServer::HTTPServer() : TCPServer()
 {
 
 }
 
-Network::HTTPServer::~HTTPServer()
+net::HTTPServer::~HTTPServer()
 {
 
 }
 
 
-void Network::HTTPServer::set404Handler(HTTPResponse (*new_404_handler)(void))
+void net::HTTPServer::set404Handler(HTTPResponse (*new_404_handler)(void))
 {
     code_404_handler = new_404_handler;
 }
 
 
-void Network::HTTPServer::addHandler(std::string path, std::function<HTTPResponse(HTTPRequest)> handler)
+void net::HTTPServer::addHandler(std::string path, std::function<HTTPResponse(HTTPRequest)> handler)
 {
     paths_handlers[path] = handler;
 }
 
-void Network::HTTPServer::removeHandler(std::string path)
+void net::HTTPServer::removeHandler(std::string path)
 {
     paths_handlers.erase(path);
 }
 
-std::unordered_map<std::string, std::function<Network::HTTPResponse(Network::HTTPRequest)>>& Network::HTTPServer::getHandlersPtr()
+std::unordered_map<std::string, std::function<net::HTTPResponse(net::HTTPRequest)>>& net::HTTPServer::getHandlersPtr()
 {
     return paths_handlers;
 }
 
 
-std::string Network::HTTPServer::http_handler(std::string request)
+std::string net::HTTPServer::http_handler(std::string request)
 {
     HTTPRequest req(request);
     URI uri(req.start_line["uri"]);
@@ -77,7 +77,7 @@ std::string Network::HTTPServer::http_handler(std::string request)
     return paths_handlers[path](req).toString();
 }
 
-void Network::HTTPServer::client_handler(int client_socket)
+void net::HTTPServer::client_handler(int client_socket)
 {
     //std::cout << "Start " << client_socket << std::endl;
     fd_set read_s;

@@ -14,7 +14,7 @@
 #include "ServerSessionData.hpp"
 
 
-namespace Network
+namespace net
 {
     std::string default_server_request_handler(std::string request);
 

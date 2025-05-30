@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <JSTypes/JSTypes.hpp>
+#include <Network/URL.hpp>
 
 
 int main()

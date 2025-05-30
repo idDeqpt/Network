@@ -9,19 +9,19 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 
-Network::TCPClient::TCPClient()
+net::TCPClient::TCPClient()
 {
 	server_socket = NULL;
 }
 
-Network::TCPClient::~TCPClient()
+net::TCPClient::~TCPClient()
 {
 	this->close();
 	WSACleanup();
 }
 
 
-int Network::TCPClient::connect(std::string host, int port)
+int net::TCPClient::connect(std::string host, int port)
 {
 	WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -39,7 +39,7 @@ int Network::TCPClient::connect(std::string host, int port)
 	return this->connect(Address(IP(addr), port));
 }
 
-int Network::TCPClient::connect(Address address)
+int net::TCPClient::connect(Address address)
 {
 	if (this->server_socket != NULL)
 		this->close();
@@ -75,7 +75,7 @@ int Network::TCPClient::connect(Address address)
     return 0;
 }
 
-bool Network::TCPClient::close()
+bool net::TCPClient::close()
 {
 	if (this->server_socket == NULL)
 		return false;
@@ -87,13 +87,13 @@ bool Network::TCPClient::close()
 }
 
 
-void Network::TCPClient::send(std::string message)
+void net::TCPClient::send(std::string message)
 {
 	if (this->server_socket != NULL)
 		::send(this->server_socket, message.c_str(), message.length(), NULL);
 }
 
-std::string Network::TCPClient::recv()
+std::string net::TCPClient::recv()
 {
 	if (this->server_socket == NULL)
 		return "";

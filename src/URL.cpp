@@ -3,16 +3,17 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 #include "Network/Address.hpp"
 
 
-Network::URI::URI()
+net::URI::URI()
 {
 	path.push_back("/");
 }
 
-Network::URI::URI(std::string uri)
+net::URI::URI(std::string uri)
 {
 	int params_i = uri.find("?");
 
@@ -47,18 +48,18 @@ Network::URI::URI(std::string uri)
 }
 
 
-unsigned int Network::URI::getLength()
+unsigned int net::URI::getLength()
 {
 	return path.size();
 }
 
-std::unordered_map<std::string, std::string>& Network::URI::getParamsPtr()
+std::unordered_map<std::string, std::string>& net::URI::getParamsPtr()
 {
 	return params;
 }
 
 
-std::string Network::URI::toString(bool with_params)
+std::string net::URI::toString(bool with_params)
 {
 	std::string result;
 	for (unsigned int i = 0; i < path.size(); i++)
@@ -76,35 +77,35 @@ std::string Network::URI::toString(bool with_params)
 }
 
 
-std::string& Network::URI::operator[](int index)
+std::string& net::URI::operator[](int index)
 {
 	return path[index];
 }
 
 
 
-Network::URL::URL()
+net::URL::URL()
 {
 	scheme = "http";
 	host = "localhost";
 	uri = URI();
 }
 
-Network::URL::URL(std::string scheme, std::string host)
+net::URL::URL(std::string scheme, std::string host)
 {
 	this->scheme = scheme;
 	this->host = host;
 	this->uri = URI();
 }
 
-Network::URL::URL(std::string scheme, std::string host, URI uri)
+net::URL::URL(std::string scheme, std::string host, URI uri)
 {
 	this->scheme = scheme;
 	this->host = host;
 	this->uri = uri;
 }
 
-Network::URL::URL(std::string url)
+net::URL::URL(std::string url)
 {
 	int pointer_begin = 0;
 	int pointer_end = url.find("://");
@@ -126,39 +127,39 @@ Network::URL::URL(std::string url)
 }
 
 
-void Network::URL::setScheme(std::string new_scheme)
+void net::URL::setScheme(std::string new_scheme)
 {
 	scheme = new_scheme;
 }
 
-void Network::URL::setHost(std::string new_host)
+void net::URL::setHost(std::string new_host)
 {
 	host = new_host;
 }
 
-void Network::URL::setURI(URI new_uri)
+void net::URL::setURI(URI new_uri)
 {
 	uri = new_uri;
 }
 
 
-std::string Network::URL::getScheme()
+std::string net::URL::getScheme()
 {
 	return scheme;
 }
 
-std::string Network::URL::getHost()
+std::string net::URL::getHost()
 {
 	return host;
 }
 
-Network::URI Network::URL::getURI()
+net::URI net::URL::getURI()
 {
 	return uri;
 }
 
 
-std::string Network::URL::toString()
+std::string net::URL::toString()
 {
 	return scheme + "://" + host + uri.toString();
 }

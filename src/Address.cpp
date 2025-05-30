@@ -6,7 +6,7 @@
 #include "winsock2.h"
 
 
-Network::IP::IP()
+net::IP::IP()
 {
 	values[0] = 127;
 	values[1] = 0;
@@ -14,7 +14,7 @@ Network::IP::IP()
 	values[3] = 1;
 }
 
-Network::IP::IP(int v1, int v2, int v3, int v4)
+net::IP::IP(int v1, int v2, int v3, int v4)
 {
 	values[0] = v1;
 	values[1] = v2;
@@ -22,7 +22,7 @@ Network::IP::IP(int v1, int v2, int v3, int v4)
 	values[3] = v4;
 }
 
-Network::IP::IP(in_addr addr)
+net::IP::IP(in_addr addr)
 {
 	values[0] = int(addr.S_un.S_un_b.s_b1);
 	values[1] = int(addr.S_un.S_un_b.s_b2);
@@ -30,7 +30,7 @@ Network::IP::IP(in_addr addr)
 	values[3] = int(addr.S_un.S_un_b.s_b4);
 }
 
-Network::IP::IP(std::string ip)
+net::IP::IP(std::string ip)
 {
 	ip += ".";
 	int last_point_pos = -1;
@@ -43,36 +43,36 @@ Network::IP::IP(std::string ip)
 }
 
 
-std::string Network::IP::toString()
+std::string net::IP::toString()
 {
 	return std::to_string(values[0]) + "." + std::to_string(values[1]) + "." + std::to_string(values[2]) + "." + std::to_string(values[3]);
 }
 
-int& Network::IP::operator[](int index)
+int& net::IP::operator[](int index)
 {
 	return values[index];
 }
 
 
 
-Network::Address::Address()
+net::Address::Address()
 {
 	port = 0;
 }
 
-Network::Address::Address(IP ip, int port)
+net::Address::Address(IP ip, int port)
 {
 	this->ip = ip;
 	this->port = port;
 }
 
-Network::Address::Address(SOCKADDR_IN addr)
+net::Address::Address(SOCKADDR_IN addr)
 {
 	ip = IP(addr.sin_addr);
 	port = ntohs(addr.sin_port);
 }
 
-Network::Address::Address(std::string address)
+net::Address::Address(std::string address)
 {
 	int points_pos = address.find(":");
 	ip = IP(address.substr(0, points_pos));
@@ -80,13 +80,13 @@ Network::Address::Address(std::string address)
 }
 
 
-std::string Network::Address::toString()
+std::string net::Address::toString()
 {
 	return ip.toString() + ":" + std::to_string(port);
 }
 
 
-SOCKADDR_IN Network::Address::toSockaddrIn()
+SOCKADDR_IN net::Address::toSockaddrIn()
 {
 	SOCKADDR_IN addr;
 	addr.sin_addr.s_addr = inet_addr(ip.toString().c_str());

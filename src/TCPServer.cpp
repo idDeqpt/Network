@@ -15,7 +15,7 @@
 #include "Network/Timer.hpp"
 
 
-std::string Network::default_server_request_handler(std::string request)
+std::string net::default_server_request_handler(std::string request)
 {
     std::string response = "Response: " + request;
 
@@ -23,7 +23,7 @@ std::string Network::default_server_request_handler(std::string request)
 }
 
 
-Network::TCPServer::TCPServer()
+net::TCPServer::TCPServer()
 {
     last_requested_session_data = 0;
     //available_threads_count = std::thread::hardware_concurrency();
@@ -31,7 +31,7 @@ Network::TCPServer::TCPServer()
     started = false;
 }
 
-Network::TCPServer::~TCPServer()
+net::TCPServer::~TCPServer()
 {
     stop();
     closesocket(this->listen_socket);
@@ -40,7 +40,7 @@ Network::TCPServer::~TCPServer()
 }
 
 
-int Network::TCPServer::init(int port, bool localhost)
+int net::TCPServer::init(int port, bool localhost)
 {
     if (inited)
         return 1;
@@ -104,7 +104,7 @@ int Network::TCPServer::init(int port, bool localhost)
     return 0;
 }
 
-bool Network::TCPServer::start(int threads_count)
+bool net::TCPServer::start(int threads_count)
 {
     if (!inited || started)
         return false;
@@ -115,7 +115,7 @@ bool Network::TCPServer::start(int threads_count)
     return true;
 }
 
-bool Network::TCPServer::stop()
+bool net::TCPServer::stop()
 {
     if (!inited || !started)
         return false;
@@ -130,31 +130,31 @@ bool Network::TCPServer::stop()
 }
 
 
-void Network::TCPServer::setRequestHandler(std::string (*new_request_handler)(std::string request))
+void net::TCPServer::setRequestHandler(std::string (*new_request_handler)(std::string request))
 {
     request_handler = new_request_handler;
 }
 
 
-Network::Address Network::TCPServer::getSelfAddress()
+net::Address net::TCPServer::getSelfAddress()
 {
     return self_address;
 }
 
 
-bool Network::TCPServer::hasNewSessionData()
+bool net::TCPServer::hasNewSessionData()
 {
    return last_requested_session_data < sessions_data.size();
 }
 
-Network::ServerSessionData Network::TCPServer::getNextSessionData()
+net::ServerSessionData net::TCPServer::getNextSessionData()
 {
     return (hasNewSessionData()) ? sessions_data[last_requested_session_data++] : ServerSessionData();
 }
 
 
 
-void Network::TCPServer::initSelfAddress(int port)
+void net::TCPServer::initSelfAddress(int port)
 {
     char hostname[128];  
     hostent * host_info;
@@ -170,7 +170,7 @@ void Network::TCPServer::initSelfAddress(int port)
     self_address = Address(IP(self_addr), port);
 }
 
-void Network::TCPServer::listen_handler()
+void net::TCPServer::listen_handler()
 {
     fd_set read_s;
     timeval time_out;
@@ -201,7 +201,7 @@ void Network::TCPServer::listen_handler()
     }
 }
 
-void Network::TCPServer::client_handler(int client_socket)
+void net::TCPServer::client_handler(int client_socket)
 {
     //std::cout << "Start " << client_socket << std::endl;
     fd_set read_s;

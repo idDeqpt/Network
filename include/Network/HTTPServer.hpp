@@ -5,7 +5,7 @@
 #include "HTTP.hpp"
 
 
-namespace Network
+namespace net
 {
     HTTPResponse default_404_handler();
 
