@@ -7,7 +7,7 @@
 #include "winsock2.h"
 
 
-namespace Network
+namespace net
 {
 	class IP
 	{

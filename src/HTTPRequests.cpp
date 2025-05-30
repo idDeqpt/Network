@@ -15,7 +15,7 @@ std::string net::Requests::get(std::string url)
 
 net::HTTPResponse net::Requests::get(net::URL url)
 {
-	//std::cout << url.toString() << std::endl;
+	std::cout << url.toString() << std::endl;
 	HTTPRequest request;
 
 	request.start_line["method"] = "GET";
@@ -38,7 +38,7 @@ net::HTTPResponse net::Requests::get(net::URL url)
 	//request.headers["Accept-Encoding"] = "gzip, deflate, br, zstd";
 	//request.headers["Accept-Language"] = "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7";
 
-	//std::cout << "|" << request.toString() << "|\n";
+	std::cout << "|" << request.toString() << "|\n";
 
 	net::TCPClient client;
 	client.connect(request.headers["Host"], 80);//((url.getScheme() == "http") ? 80 : 443));

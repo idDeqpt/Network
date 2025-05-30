@@ -5,4 +5,4 @@ cmake ..
 cmake --build .
 
 cd..
-copy "..\bin\lib\Debug\jstypes.dll" ".\bin\Debug\"
+copy "..\bin\lib\Debug\network.dll" ".\bin\Debug\"

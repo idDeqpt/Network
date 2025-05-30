@@ -58,7 +58,7 @@ int net::TCPClient::connect(Address address)
         std::cerr << "Error at socket: " << WSAGetLastError() << "\n";
         WSACleanup();
         return 1;
-    }
+    } std::cout << "socket created: " << server_socket << std::endl;
 
     sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
