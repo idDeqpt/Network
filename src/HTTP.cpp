@@ -2,33 +2,29 @@
 
 #include <string>
 #include <unordered_map>
+#include <iostream>
 
 
-net::HTTP::HTTP()
+net::HTTP::HTTP() : start_line{"", "", ""}
 {
+	//start_line = {"", "", ""};
 	body = "";
 }
 
-net::HTTP::HTTP(std::string message)
+net::HTTP::HTTP(std::string message) : HTTP()
 {
-	start_line = {
-		{"0", ""},
-		{"1", ""},
-		{"2", ""}
-	};
-
 	int body_pos = (message.find("\r\n\r\n\r\n") == std::string::npos) ? std::string::npos : (message.find("\r\n\r\n") + 6);
 	int pointer_begin = 0;
 	int pointer_end = message.find(" ");
-	start_line["0"] = message.substr(0, pointer_end);
+	start_line[0] = message.substr(0, pointer_end);
 	pointer_begin = pointer_end + 1;
 
 	pointer_end = message.find(" ", pointer_begin + 1);
-	start_line["1"] = message.substr(pointer_begin, pointer_end - pointer_begin);
+	start_line[1] = message.substr(pointer_begin, pointer_end - pointer_begin);
 	pointer_begin = pointer_end + 1;
 
 	pointer_end = message.find("\r\n", pointer_begin + 1);
-	start_line["2"] = message.substr(pointer_begin, pointer_end - pointer_begin);
+	start_line[2] = message.substr(pointer_begin, pointer_end - pointer_begin);
 	pointer_begin = pointer_end + 2;
 
 	int stop_point = (body_pos == std::string::npos) ? message.length() : (body_pos - 6);
@@ -45,8 +41,8 @@ net::HTTP::HTTP(std::string message)
 std::string net::HTTP::toString()
 {
 	std::string message = "";
-	for (auto&[key, value] : start_line)
-		message += value + " ";
+	for (unsigned int i = 0; i < 3; i++)
+		message += start_line[i] + " ";
 	message.pop_back();
 	message += "\r\n";
 	for (auto&[key, value] : headers)
@@ -62,28 +58,18 @@ net::HTTPRequest::HTTPRequest() : HTTP()
 }
 
 net::HTTPRequest::HTTPRequest(std::string request) : HTTP(request)
-{
-	start_line["method"] = start_line["0"];
-	start_line.erase("0");
-	start_line["uri"] = start_line["1"];
-	start_line.erase("1");
-	start_line["http-version"] = start_line["2"];
-	start_line.erase("2");
+{ //method uri http-version
+
 }
 
 
 
 net::HTTPResponse::HTTPResponse() : HTTP()
 {
-	
+
 }
 
 net::HTTPResponse::HTTPResponse(std::string response) : HTTP(response)
-{
-	start_line["http-version"] = start_line["0"];
-	start_line.erase("0");
-	start_line["status-code"] = start_line["1"];
-	start_line.erase("1");
-	start_line["status-comment"] = start_line["2"];
-	start_line.erase("2");
+{ //http-version status-code status-comment
+
 }

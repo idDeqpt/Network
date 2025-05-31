@@ -10,7 +10,7 @@ namespace net
 	class HTTP
 	{
 	public:
-		std::unordered_map<std::string, std::string> start_line;
+		std::string start_line[3];
 		std::unordered_map<std::string, std::string> headers;
 		std::string body;
 

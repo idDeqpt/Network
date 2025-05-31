@@ -18,9 +18,9 @@ net::HTTPResponse net::Requests::get(net::URL url)
 	std::cout << url.toString() << std::endl;
 	HTTPRequest request;
 
-	request.start_line["method"] = "GET";
-	request.start_line["uri"] = url.getURI().toString();
-	request.start_line["http-version"] = "HTTP/1.1";
+	request.start_line[0] = "GET";
+	request.start_line[1] = url.getURI().toString();
+	request.start_line[2] = "HTTP/1.1";
 
 	request.headers["Host"] = url.getHost();
 	request.headers["Connection"] = "close";

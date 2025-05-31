@@ -18,9 +18,9 @@ net::HTTPResponse net::default_404_handler()
 
     response.body = "<p>404</p>";
 
-    response.start_line["http-version"] = "HTTP/1.1";
-    response.start_line["status-code"] = "404";
-    response.start_line["status-comment"] = "NOT FOUND";
+    response.start_line[0] = "HTTP/1.1";
+    response.start_line[1] = "404";
+    response.start_line[2] = "NOT FOUND";
 
     response.headers["Version"] = "HTTP/1.1";
     response.headers["Content-Type"] = "text/html; charset=utf-8";
@@ -68,7 +68,7 @@ std::unordered_map<std::string, std::function<net::HTTPResponse(net::HTTPRequest
 std::string net::HTTPServer::http_handler(std::string request)
 {
     HTTPRequest req(request);
-    URI uri(req.start_line["uri"]);
+    URI uri(req.start_line[1]);
     std::string path = uri.toString(false);
 
     if (paths_handlers.count(path) == 0)
