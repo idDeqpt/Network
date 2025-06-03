@@ -3,9 +3,6 @@
 
 #include <string>
 
-#pragma comment(lib, "ws2_32.lib")
-#include "winsock2.h"
-
 
 namespace net
 {
@@ -14,7 +11,6 @@ namespace net
 	public:
 		IP();
 		IP(int v1, int v2, int v3, int v4);
-		IP(in_addr addr);
 		IP(std::string ip);
 
 		std::string toString();
@@ -33,11 +29,9 @@ namespace net
 
 		Address();
 		Address(IP ip, int port);
-		Address(SOCKADDR_IN addr);
 		Address(std::string address);
 
 		std::string toString();
-		SOCKADDR_IN toSockaddrIn();
 	};
 }
 

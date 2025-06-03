@@ -2,9 +2,6 @@
 
 #include <string>
 
-#pragma comment(lib, "ws2_32.lib")
-#include "winsock2.h"
-
 
 net::IP::IP()
 {
@@ -20,14 +17,6 @@ net::IP::IP(int v1, int v2, int v3, int v4)
 	values[1] = v2;
 	values[2] = v3;
 	values[3] = v4;
-}
-
-net::IP::IP(in_addr addr)
-{
-	values[0] = int(addr.S_un.S_un_b.s_b1);
-	values[1] = int(addr.S_un.S_un_b.s_b2);
-	values[2] = int(addr.S_un.S_un_b.s_b3);
-	values[3] = int(addr.S_un.S_un_b.s_b4);
 }
 
 net::IP::IP(std::string ip)
@@ -65,13 +54,6 @@ net::Address::Address(IP ip, int port)
 	this->ip = ip;
 	this->port = port;
 }
-
-net::Address::Address(SOCKADDR_IN addr)
-{
-	ip = IP(addr.sin_addr);
-	port = ntohs(addr.sin_port);
-}
-
 net::Address::Address(std::string address)
 {
 	int points_pos = address.find(":");
@@ -83,14 +65,4 @@ net::Address::Address(std::string address)
 std::string net::Address::toString()
 {
 	return ip.toString() + ":" + std::to_string(port);
-}
-
-
-SOCKADDR_IN net::Address::toSockaddrIn()
-{
-	SOCKADDR_IN addr;
-	addr.sin_addr.s_addr = inet_addr(ip.toString().c_str());
-	addr.sin_port = htons(port);
-	addr.sin_family = AF_INET;
-	return addr;
 }

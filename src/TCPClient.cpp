@@ -36,7 +36,7 @@ int net::TCPClient::connect(std::string host, int port)
 		return 1;
 
 	in_addr addr = *(in_addr*)host_info->h_addr_list[0];
-	return this->connect(Address(IP(addr), port));
+	return this->connect(Address(IP(addr.S_un.S_un_b.s_b1, addr.S_un.S_un_b.s_b2, addr.S_un.S_un_b.s_b3, addr.S_un.S_un_b.s_b4), port));
 }
 
 int net::TCPClient::connect(Address address)

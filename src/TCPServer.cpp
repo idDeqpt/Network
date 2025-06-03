@@ -167,7 +167,7 @@ void net::TCPServer::initSelfAddress(int port)
         self_address = Address();
 
     self_addr.s_addr = *(u_long*)host_info->h_addr_list[0];
-    self_address = Address(IP(self_addr), port);
+    self_address = Address(IP(self_addr.S_un.S_un_b.s_b1, self_addr.S_un.S_un_b.s_b2, self_addr.S_un.S_un_b.s_b3, self_addr.S_un.S_un_b.s_b4), port);
 }
 
 void net::TCPServer::listen_handler()
