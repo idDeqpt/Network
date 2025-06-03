@@ -7,7 +7,6 @@
 
 net::HTTP::HTTP() : start_line{"", "", ""}
 {
-	//start_line = {"", "", ""};
 	body = "";
 }
 

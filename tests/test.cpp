@@ -39,20 +39,19 @@ int main()
     server.addHandler("/", [](net::HTTPRequest request) -> net::HTTPResponse
     {
         net::HTTPResponse response;
-        net::URI uri(request.start_line["uri"]);
+        net::URI uri(request.start_line[1]);
         std::cout << request.toString() << std::endl;
 
         for (auto& [key, value] : uri.getParamsPtr())
             response.body += "<p>" + key + ": " + value + "</p>";
         response.body += "<p>success</p>";
 
-        response.start_line["http-version"] = "HTTP/1.1";
-        response.start_line["status-code"] = "200";
-        response.start_line["status-comment"] = "OK";
+        response.start_line[0] = "HTTP/1.1";
+        response.start_line[1] = "200";
+        response.start_line[2] = "OK";
 
         response.headers["Version"] = "HTTP/1.1";
         response.headers["Content-Type"] = "text/html; charset=utf-8";
-        response.headers["Version"] = "HTTP/1.1";
         response.headers["Content-Length"] = std::to_string(response.body.length());
 
         return response;
@@ -61,18 +60,17 @@ int main()
     server.addHandler("/test", [](net::HTTPRequest request) -> net::HTTPResponse
     {
         net::HTTPResponse response;
-        net::URI uri(request.start_line["uri"]);
+        net::URI uri(request.start_line[1]);
         std::cout << request.toString() << std::endl;
 
         response.body = "answer!!!!!!!!!!!!!!!!!!!";
 
-        response.start_line["http-version"] = "HTTP/1.1";
-        response.start_line["status-code"] = "200";
-        response.start_line["status-comment"] = "OK";
+        response.start_line[0] = "HTTP/1.1";
+        response.start_line[1] = "200";
+        response.start_line[2] = "OK";
 
         response.headers["Version"] = "HTTP/1.1";
         response.headers["Content-Type"] = "text/html; charset=utf-8";
-        response.headers["Version"] = "HTTP/1.1";
         response.headers["Content-Length"] = std::to_string(response.body.length());
 
         return response;
