@@ -3,12 +3,12 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <windows.h>
 
 #define _WIN32_WINNT 0x501
 #include <WinSock2.h>
 #include <WS2TCPip.h>
 #pragma comment(lib, "Ws2_32.lib")
+#include <windows.h>
 
 #include "Network/Address.hpp"
 #include "Network/ServerSessionData.hpp"

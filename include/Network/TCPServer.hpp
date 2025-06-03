@@ -1,10 +1,5 @@
 #ifndef NETWORK_TCP_SERVER
 #define NETWORK_TCP_SERVER
-  
-#define _WIN32_WINNT 0x501
-#include <WinSock2.h>
-#include <WS2TCPip.h>
-#pragma comment(lib, "Ws2_32.lib")
 
 #include <string>
 #include <thread>
@@ -12,6 +7,8 @@
 
 #include "Address.hpp"
 #include "ServerSessionData.hpp"
+
+struct addrinfo;
 
 
 namespace net
@@ -38,7 +35,7 @@ namespace net
     protected:
         bool inited, started;
         int listen_socket;
-        struct addrinfo* addr;
+        addrinfo* addr;
         Address self_address;
         int last_requested_session_data;
         std::vector<ServerSessionData> sessions_data;
