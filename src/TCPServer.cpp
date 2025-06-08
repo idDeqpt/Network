@@ -173,14 +173,12 @@ void net::TCPServer::initSelfAddress(int port)
 void net::TCPServer::listen_handler()
 {
     fd_set read_s;
-    timeval time_out;
-    time_out.tv_sec = 0;
-    time_out.tv_usec = 200000; //Таймаут 0.2 секунды.
     while (started)
     {
         FD_ZERO(&read_s);
         FD_SET(this->listen_socket, &read_s);
-        if (select(0, &read_s, NULL, NULL, &time_out) > 0)
+        int select_result = select(0, &read_s, NULL, NULL, NULL);
+        if (select_result > 0)
         {
             int client_socket = accept(this->listen_socket, NULL, NULL);
 
