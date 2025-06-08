@@ -5,8 +5,9 @@
 #include <thread>
 #include <vector>
 
-#include "Address.hpp"
 #include "ServerSessionData.hpp"
+#include "ThreadPool.hpp"
+#include "Address.hpp"
 
 struct addrinfo;
 
@@ -40,7 +41,7 @@ namespace net
         int last_requested_session_data;
         std::vector<ServerSessionData> sessions_data;
         std::thread listen_handler_thread;
-        std::vector<std::thread> listen_threads;
+        ThreadPool listen_pool;
         std::string (*request_handler)(std::string) = default_server_request_handler;
 
         void initSelfAddress(int port);

@@ -1,7 +1,7 @@
-#ifdef THREAD_POLL_CLASS_HPP
-#define THREAD_POLL_CLASS_HPP
+#ifndef THREAD_POOL_CLASS_HPP
+#define THREAD_POOL_CLASS_HPP
 
-#include <iostream>
+#include <condition_variable>
 #include <utility>
 #include <future>
 #include <vector>
@@ -39,6 +39,7 @@ public:
 		unsigned int task_id = tasks_total_number++;
 		std::lock_guard<std::mutex> lock(mtx);
 		tasks.emplace(std::async(std::launch::deferred, task_func, args...), task_id);
+		tasks_cv.notify_one();
 
 		return task_id;
 	}
@@ -49,12 +50,14 @@ protected:
 	std::mutex mtx;
 	std::vector<std::thread> threads;
 	std::queue<std::pair<std::future<void>, unsigned int>> tasks;
+	std::condition_variable tasks_cv;
 
 	void run()
 	{
 		while (process)
 		{
 			std::unique_lock<std::mutex> locker(mtx);
+			tasks_cv.wait(locker, [this]()->bool {return !tasks.empty() || !process;});
 
 			if (!tasks.empty())
 			{
@@ -63,10 +66,9 @@ protected:
 				locker.unlock();
 
 				elem.first.get();
-				std::cout << "Getted\n";
 			}
 		}
 	}
 };
 
-#endif //THREAD_POLL_CLASS_HPP
+#endif //THREAD_POOL_CLASS_HPP

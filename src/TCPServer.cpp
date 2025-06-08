@@ -10,8 +10,9 @@
 #pragma comment(lib, "Ws2_32.lib")
 #include <windows.h>
 
-#include "Network/Address.hpp"
 #include "Network/ServerSessionData.hpp"
+#include "Network/ThreadPool.hpp"
+#include "Network/Address.hpp"
 #include "Network/Timer.hpp"
 
 
@@ -26,7 +27,6 @@ std::string net::default_server_request_handler(std::string request)
 net::TCPServer::TCPServer()
 {
     last_requested_session_data = 0;
-    //available_threads_count = std::thread::hardware_concurrency();
     inited = false;
     started = false;
 }
@@ -122,9 +122,6 @@ bool net::TCPServer::stop()
 
     started = false;
     listen_handler_thread.join();
-    for (unsigned int i = 0; i < listen_threads.size(); i++)
-        listen_threads[i].join();
-    listen_threads.clear();
 
     return true;
 }
@@ -181,20 +178,7 @@ void net::TCPServer::listen_handler()
         if (select_result > 0)
         {
             int client_socket = accept(this->listen_socket, NULL, NULL);
-
-            this->listen_threads.resize(this->listen_threads.size() + 1);
-            this->listen_threads.back() = std::thread{&TCPServer::client_handler, this, client_socket};
-
-            /*
-            std::cout << "s: " << this->listen_threads.size() << std::endl;
-            for (int i = this->listen_threads.size() - 1; i >= 0; i--)
-            {
-                if (this->listen_threads[i].joinable())
-                {
-                    this->listen_threads[i].join();
-                    this->listen_threads.erase(this->listen_threads.begin() + i);
-                }
-            }*/
+            std::cout << listen_pool.addTask(&TCPServer::client_handler, this, client_socket) << std::endl;
         }
     }
 }
