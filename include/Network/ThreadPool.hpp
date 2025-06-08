@@ -14,6 +14,8 @@
 class ThreadPool
 {
 public:
+	ThreadPool() : ThreadPool(std::thread::hardware_concurrency()) {}
+
 	ThreadPool(unsigned int threads_count)
 	{
 		process = true;
