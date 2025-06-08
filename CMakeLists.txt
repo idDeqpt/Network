@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 3.4.0)
+cmake_minimum_required(VERSION 3.5.0)
 
 set(PROJECT_NAME network)
-set(PATH_TO_JSTYPES "C:/Projects/C++/libraries/JSTypes/include")
 
 project(${PROJECT_NAME} CXX)
 include_directories("./include")
@@ -23,10 +22,6 @@ set (CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 # Создание динамической библиотеки с именем ${PROJECT_NAME}
 add_library(${PROJECT_NAME} SHARED ${SOURCE_LIB})
 
-add_executable(thread_pool, include/Network/ThreadPool.hpp)
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${PATH_TO_JSTYPES})
-target_link_libraries(${PROJECT_NAME} PRIVATE "C:/Projects/C++/libraries/JSTypes/bin/lib/Debug/jstypes.lib")
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 set(dir ${CMAKE_CURRENT_SOURCE_DIR}/bin/)
