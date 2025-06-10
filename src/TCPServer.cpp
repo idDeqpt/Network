@@ -177,7 +177,7 @@ void net::TCPServer::listen_handler()
         if (select_result > 0)
         {
             int client_socket = accept(this->listen_socket, NULL, NULL);
-            listen_pool.addTask(&TCPServer::client_handler, this, client_socket) << std::endl
+            listen_pool.addTask(&TCPServer::client_handler, this, client_socket);
         }
     }
 }
