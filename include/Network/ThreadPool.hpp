@@ -1,12 +1,14 @@
 #ifndef THREAD_POOL_CLASS_HPP
 #define THREAD_POOL_CLASS_HPP
 
+#include <iostream>
 #include <condition_variable>
 #include <utility>
 #include <future>
 #include <vector>
 #include <thread>
 #include <atomic>
+#include <chrono>
 #include <mutex>
 #include <queue>
 
@@ -37,9 +39,11 @@ public:
 	unsigned int addTask(const Function& task_func, Args&&... args)
 	{
 		unsigned int task_id = tasks_total_number++;
-		std::lock_guard<std::mutex> lock(mtx);
-		tasks.emplace(std::async(std::launch::deferred, task_func, args...), task_id);
-		tasks_cv.notify_one();
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			tasks.emplace(std::async(std::launch::deferred, task_func, args...), task_id);
+			tasks_cv.notify_one();
+		}
 
 		return task_id;
 	}
@@ -57,7 +61,8 @@ protected:
 		while (process)
 		{
 			std::unique_lock<std::mutex> locker(mtx);
-			tasks_cv.wait(locker, [this]()->bool {return !tasks.empty() || !process;});
+			tasks_cv.wait(locker, [this] {return !tasks.empty() || !process;});
+			std::this_thread::sleep_for(std::chrono::microseconds(10)); //без этого не работает
 
 			if (!tasks.empty())
 			{
