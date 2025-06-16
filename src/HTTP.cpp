@@ -12,7 +12,7 @@ net::HTTP::HTTP() : start_line{"", "", ""}
 
 net::HTTP::HTTP(std::string message) : HTTP()
 {
-	int body_pos = (message.find("\r\n\r\n\r\n") == std::string::npos) ? std::string::npos : (message.find("\r\n\r\n") + 6);
+	int body_pos = (message.find("\r\n\r\n") == std::string::npos) ? std::string::npos : (message.find("\r\n\r\n") + 4);
 	int pointer_begin = 0;
 	int pointer_end = message.find(" ");
 	start_line[0] = message.substr(0, pointer_end);
