@@ -115,9 +115,7 @@ void net::HTTPServer::client_handler(int client_socket)
             result = send(client_socket, response.c_str(), response.length(), 0);
             
             std::unique_lock<std::mutex> locker(session_data_mtx);
-            sessions_data.push_back(ServerSessionData(sessions_data.size(), request, response));
-            if (sessions_data.size() > 20)
-                sessions_data.erase(sessions_data.begin(), sessions_data.begin() + (sessions_data.size() - 20));
+            sessions_data.push(ServerSessionData(session_data_counter++, request, response));
             locker.unlock();
             //std::cout << "SIZE: " << sessions_data.size() << "\n";
 

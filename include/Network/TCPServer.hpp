@@ -5,6 +5,7 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <queue>
 
 #include "ServerSessionData.hpp"
 #include "ThreadPool.hpp"
@@ -39,8 +40,8 @@ namespace net
         int listen_socket;
         addrinfo* addr;
         Address self_address;
-        int last_requested_session_data;
-        std::vector<ServerSessionData> sessions_data;
+        int session_data_counter, last_requested_session_data;
+        std::queue<ServerSessionData> sessions_data;
         std::thread listen_handler_thread;
         ThreadPool listen_pool;
         std::mutex session_data_mtx;
