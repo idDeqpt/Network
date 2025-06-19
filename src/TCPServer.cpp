@@ -214,7 +214,7 @@ void net::TCPServer::client_handler(int client_socket)
             if (sessions_data.size() > 20)
                 sessions_data.erase(sessions_data.begin(), sessions_data.begin() + (sessions_data.size() - 20));
             locker.unlock();
-            std::cout << "SIZE: " << sessions_data.size() << "\n";
+            //std::cout << "SIZE: " << sessions_data.size() << "\n";
 
             if (result == SOCKET_ERROR)
                 std::cerr << "send failed: " << WSAGetLastError() << "\n";
