@@ -86,18 +86,6 @@ std::unordered_map<std::string, std::function<net::HTTPResponse(net::HTTPRequest
     return paths_handlers;
 }
 
-/*
-std::string net::HTTPServer::http_handler(std::string request)
-{
-    HTTPRequest req(request);
-    URI uri(req.start_line[1]);
-    std::string path = uri.toString(false);
-
-    if (paths_handlers.count(path) == 0)
-        return code_404_handler().toString();
-
-    return paths_handlers[path](req).toString();
-}*/
 
 void net::HTTPServer::client_handler(int client_socket)
 {
@@ -125,8 +113,13 @@ void net::HTTPServer::client_handler(int client_socket)
         {
             std::string response = http_handler(*this, request);
             result = send(client_socket, response.c_str(), response.length(), 0);
+            
+            std::unique_lock<std::mutex> locker(session_data_mtx);
             sessions_data.push_back(ServerSessionData(sessions_data.size(), request, response));
-            //std::cout << sessions_data.size() << "\n";
+            if (sessions_data.size() > 20)
+                sessions_data.erase(sessions_data.begin(), sessions_data.begin() + (sessions_data.size() - 20));
+            locker.unlock();
+            std::cout << "SIZE: " << sessions_data.size() << "\n";
 
             if (result == SOCKET_ERROR)
                 std::cerr << "send failed: " << WSAGetLastError() << "\n";

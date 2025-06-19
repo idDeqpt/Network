@@ -4,6 +4,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <mutex>
 
 #include "ServerSessionData.hpp"
 #include "ThreadPool.hpp"
@@ -42,6 +43,7 @@ namespace net
         std::vector<ServerSessionData> sessions_data;
         std::thread listen_handler_thread;
         ThreadPool listen_pool;
+        std::mutex session_data_mtx;
         std::string (*request_handler)(std::string) = default_server_request_handler;
 
         void initSelfAddress(int port);
