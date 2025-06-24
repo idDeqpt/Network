@@ -107,7 +107,7 @@ void net::HTTPServer::client_handler(int client_socket)
         std::string request;
 
         int recv_result = 0;
-        while ((int recv_result = recv(client_socket, buf, max_client_buffer_size, 0)) > 0)
+        while ((recv_result = recv(client_socket, buf, max_client_buffer_size, 0)) > 0)
         {
             if (recv_result < max_client_buffer_size)
                 buf[recv_result] = '\0';

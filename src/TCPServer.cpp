@@ -208,7 +208,7 @@ void net::TCPServer::client_handler(int client_socket)
         std::string request;
 
         int recv_result = 0;
-        while ((int recv_result = recv(client_socket, buf, max_client_buffer_size, 0)) > 0)
+        while ((recv_result = recv(client_socket, buf, max_client_buffer_size, 0)) > 0)
         {
             if (recv_result < max_client_buffer_size)
                 buf[recv_result] = '\0';
@@ -218,7 +218,7 @@ void net::TCPServer::client_handler(int client_socket)
 
         if (total_bytes > 0)
         {
-            std::string response = http_handler(*this, request);
+            std::string response = request_handler(request);
             int send_result = send(client_socket, response.c_str(), response.length(), 0);
             
             std::unique_lock<std::mutex> locker(session_data_mtx);
