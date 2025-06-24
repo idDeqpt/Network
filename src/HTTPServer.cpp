@@ -109,10 +109,9 @@ void net::HTTPServer::client_handler(int client_socket)
         int recv_result = 0;
         while ((recv_result = recv(client_socket, buf, max_client_buffer_size, 0)) > 0)
         {
-            if (recv_result < max_client_buffer_size)
-                buf[recv_result] = '\0';
             request += buf;
             total_bytes += recv_result;
+            request.resize(total_bytes);
         }
 
         if (total_bytes > 0)
