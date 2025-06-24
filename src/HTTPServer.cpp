@@ -97,29 +97,34 @@ void net::HTTPServer::client_handler(int client_socket)
     FD_SET(client_socket, &read_s);
     if (select(0, &read_s, NULL, NULL, &time_out) > 0)
     {
+        u_long mode = 1; //1 для неблокирующего режима
+        ioctlsocket(client_socket, FIONBIO, &mode);
+
         const int max_client_buffer_size = 1024;
         char buf[max_client_buffer_size];
 
-        int result = recv(client_socket, buf, max_client_buffer_size, 0);
-        buf[result] = '\0';
-        std::string request = buf;
-        //std::cout << "DATAAAAAA\n" << buf << "DATAAAAAAAA\n" << std::endl;
+        int total_bytes = 0;
+        std::string request;
 
-        if (result == SOCKET_ERROR)
-            std::cerr << "recv failed: " << result << "\n";
-        else if (result == 0)
-            std::cerr << "connection closed...\n";
-        else if (result > 0)
+        int recv_result = 0;
+        while ((int recv_result = recv(client_socket, buf, max_client_buffer_size, 0)) > 0)
+        {
+            if (recv_result < max_client_buffer_size)
+                buf[recv_result] = '\0';
+            request += buf;
+            total_bytes += recv_result;
+        }
+
+        if (total_bytes > 0)
         {
             std::string response = http_handler(*this, request);
-            result = send(client_socket, response.c_str(), response.length(), 0);
+            int send_result = send(client_socket, response.c_str(), response.length(), 0);
             
             std::unique_lock<std::mutex> locker(session_data_mtx);
             sessions_data.push(ServerSessionData(session_data_counter++, request, response));
             locker.unlock();
-            //std::cout << "SIZE: " << sessions_data.size() << "\n";
 
-            if (result == SOCKET_ERROR)
+            if (send_result == SOCKET_ERROR)
                 std::cerr << "send failed: " << WSAGetLastError() << "\n";
         }
     }
