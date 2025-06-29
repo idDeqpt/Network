@@ -11,8 +11,6 @@
 #include "ThreadPool.hpp"
 #include "Address.hpp"
 
-struct addrinfo;
-
 
 namespace net
 {
@@ -24,8 +22,9 @@ namespace net
         TCPServer();
         ~TCPServer();
 
-        int init(int port, bool localhost = false);
-        bool start(int threads_count = -1);
+        int init(Address address);
+        int init(int port); //for localhost
+        bool start();
         bool stop();
 
         void setRequestHandler(std::string (*new_request_handler)(std::string));
@@ -38,7 +37,6 @@ namespace net
     protected:
         bool inited, started;
         int listen_socket;
-        addrinfo* addr;
         Address self_address;
         int session_data_counter, last_requested_session_data;
         std::queue<ServerSessionData> sessions_data;

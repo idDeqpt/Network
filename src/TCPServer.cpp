@@ -35,12 +35,11 @@ net::TCPServer::~TCPServer()
 {
     stop();
     closesocket(this->listen_socket);
-    freeaddrinfo(this->addr);
     WSACleanup();
 }
 
 
-int net::TCPServer::init(int port, bool localhost)
+int net::TCPServer::init(Address address)
 {
     if (inited)
         return 1;
@@ -52,7 +51,6 @@ int net::TCPServer::init(int port, bool localhost)
         return result;
     }
 
-    this->addr = NULL;
     struct addrinfo hints;
     ZeroMemory(&hints, sizeof(hints));
     hints.ai_family = AF_INET;
@@ -60,16 +58,9 @@ int net::TCPServer::init(int port, bool localhost)
     hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags = AI_PASSIVE;
 
-    if (localhost)
-    {
-        self_address.port = port;
-        result = getaddrinfo("127.0.0.1", std::to_string(port).c_str(), &hints, &this->addr);
-    }
-    else
-    {
-        initSelfAddress(port);
-        result = getaddrinfo(self_address.ip.toString().c_str(), std::to_string(port).c_str(), &hints, &this->addr);
-    }
+    addrinfo *addr;
+    self_address = address;
+    result = getaddrinfo(self_address.ip.toString().c_str(), std::to_string(self_address.port).c_str(), &hints, &addr);
 
     if (result != 0) {
         std::cerr << "getaddrinfo failed: " << result << "\n";
@@ -77,17 +68,16 @@ int net::TCPServer::init(int port, bool localhost)
         return 1;
     }
 
-    this->listen_socket = socket(this->addr->ai_family, this->addr->ai_socktype, this->addr->ai_protocol);
+    this->listen_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (this->listen_socket == INVALID_SOCKET) {
         std::cerr << "Error at socket: " << WSAGetLastError() << "\n";
-        freeaddrinfo(this->addr);
+        freeaddrinfo(addr);
         WSACleanup();
         return 1;
     }
 
     if (bind(this->listen_socket, addr->ai_addr, (int)addr->ai_addrlen) == SOCKET_ERROR) {
         std::cerr << "bind failed with error: " << WSAGetLastError() << "\n";
-        freeaddrinfo(this->addr);
         closesocket(this->listen_socket);
         WSACleanup();
         return 1;
@@ -104,7 +94,12 @@ int net::TCPServer::init(int port, bool localhost)
     return 0;
 }
 
-bool net::TCPServer::start(int threads_count)
+int net::TCPServer::init(int port) //for 0.0.0.0
+{
+    return init(Address(IP(0, 0, 0, 0), port));
+}
+
+bool net::TCPServer::start()
 {
     if (!inited || started)
         return false;
@@ -155,22 +150,6 @@ net::ServerSessionData net::TCPServer::getNextSessionData()
 }
 
 
-
-void net::TCPServer::initSelfAddress(int port)
-{
-    char hostname[128];  
-    hostent * host_info;
-    in_addr self_addr;
-
-    gethostname(hostname, 128);
-    host_info = gethostbyname(hostname);
-
-    if ((host_info == NULL) || (host_info->h_addr_list[0] == 0))
-        self_address = Address();
-
-    self_addr.s_addr = *(u_long*)host_info->h_addr_list[0];
-    self_address = Address(IP(self_addr.S_un.S_un_b.s_b1, self_addr.S_un.S_un_b.s_b2, self_addr.S_un.S_un_b.s_b3, self_addr.S_un.S_un_b.s_b4), port);
-}
 
 void net::TCPServer::listen_handler()
 {
