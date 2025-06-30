@@ -14,7 +14,9 @@
 
 namespace net
 {
-    std::string default_server_request_handler(std::string request);
+    class TCPServer;
+
+    std::string default_server_request_handler(TCPServer*, std::string request);
 
     class TCPServer
     {
@@ -27,7 +29,7 @@ namespace net
         bool start();
         bool stop();
 
-        void setRequestHandler(std::string (*new_request_handler)(std::string));
+        void setRequestHandler(std::string (*new_request_handler)(TCPServer*, std::string));
 
         Address getSelfAddress();
 
@@ -43,7 +45,7 @@ namespace net
         std::thread listen_handler_thread;
         ThreadPool listen_pool;
         std::mutex session_data_mtx;
-        std::string (*request_handler)(std::string) = default_server_request_handler;
+        std::string (*request_handler)(TCPServer*, std::string) = default_server_request_handler;
 
         void initSelfAddress(int port);
         void listen_handler();

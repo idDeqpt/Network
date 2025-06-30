@@ -30,23 +30,24 @@ net::HTTPResponse net::default_404_handler()
     return response;
 }
 
-std::string net::default_http_handler(HTTPServer& server, std::string request)
+std::string net::default_http_handler(TCPServer* server, std::string request)
 {
     HTTPRequest req(request);
     URI uri(req.start_line[1]);
     std::string path = uri.toString(false);
 
-    if (server.getHandlersPtr().count(path) == 0)
-        return server.get404Handler()().toString();
+    HTTPServer* http_server = dynamic_cast<HTTPServer*>(server);
+    if (http_server->getHandlersPtr().count(path) == 0)
+        return http_server->get404Handler()().toString();
 
-    return server.getHandlersPtr()[path](req).toString();
+    return http_server->getHandlersPtr()[path](req).toString();
 }
 
 
 
 net::HTTPServer::HTTPServer() : TCPServer()
 {
-
+    setRequestHandler(default_http_handler);
 }
 
 net::HTTPServer::~HTTPServer()
@@ -58,11 +59,6 @@ net::HTTPServer::~HTTPServer()
 void net::HTTPServer::set404Handler(HTTPResponse (*new_404_handler)(void))
 {
     code_404_handler = new_404_handler;
-}
-
-void net::HTTPServer::setHTTPHandler(std::string (*new_http_handler)(HTTPServer&, std::string))
-{
-    http_handler = new_http_handler;
 }
 
 net::HTTPResponse(*net::HTTPServer::get404Handler())()
@@ -84,50 +80,4 @@ void net::HTTPServer::removeHandler(std::string path)
 std::unordered_map<std::string, std::function<net::HTTPResponse(net::HTTPRequest)>>& net::HTTPServer::getHandlersPtr()
 {
     return paths_handlers;
-}
-
-
-void net::HTTPServer::client_handler(int client_socket)
-{
-    //std::cout << "Start " << client_socket << std::endl;
-    fd_set read_s;
-    timeval time_out;
-    time_out.tv_sec = 5;
-    FD_ZERO(&read_s);
-    FD_SET(client_socket, &read_s);
-    if (select(0, &read_s, NULL, NULL, &time_out) > 0)
-    {
-        u_long mode = 1; //1 для неблокирующего режима
-        ioctlsocket(client_socket, FIONBIO, &mode);
-
-        const int max_client_buffer_size = 1024;
-        char buf[max_client_buffer_size];
-
-        int total_bytes = 0;
-        std::string request;
-
-        int recv_result = 0;
-        while ((recv_result = recv(client_socket, buf, max_client_buffer_size, 0)) > 0)
-        {
-            request += buf;
-            total_bytes += recv_result;
-            request.resize(total_bytes);
-        }
-
-        if (total_bytes > 0)
-        {
-            std::string response = http_handler(*this, request);
-            int send_result = send(client_socket, response.c_str(), response.length(), 0);
-            
-            std::unique_lock<std::mutex> locker(session_data_mtx);
-            sessions_data.push(ServerSessionData(session_data_counter++, request, response));
-            locker.unlock();
-
-            if (send_result == SOCKET_ERROR)
-                std::cerr << "send failed: " << WSAGetLastError() << "\n";
-        }
-    }
-
-    closesocket(client_socket);
-    //std::cout << "Finish " << client_socket << std::endl;
 }

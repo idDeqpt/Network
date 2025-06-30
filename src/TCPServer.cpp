@@ -15,7 +15,7 @@
 #include "Network/Timer.hpp"
 
 
-std::string net::default_server_request_handler(std::string request)
+std::string net::default_server_request_handler(TCPServer* server, std::string request)
 {
     std::string response = "Response: " + request;
 
@@ -122,7 +122,7 @@ bool net::TCPServer::stop()
 }
 
 
-void net::TCPServer::setRequestHandler(std::string (*new_request_handler)(std::string request))
+void net::TCPServer::setRequestHandler(std::string (*new_request_handler)(TCPServer* server, std::string request))
 {
     request_handler = new_request_handler;
 }
@@ -196,7 +196,7 @@ void net::TCPServer::client_handler(int client_socket)
 
         if (total_bytes > 0)
         {
-            std::string response = request_handler(request);
+            std::string response = request_handler(this, request);
             int send_result = send(client_socket, response.c_str(), response.length(), 0);
             
             std::unique_lock<std::mutex> locker(session_data_mtx);
