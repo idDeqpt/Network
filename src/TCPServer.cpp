@@ -3,16 +3,47 @@
 #include <sstream>
 #include <string>
 
-#define _WIN32_WINNT 0x501
-#include <WinSock2.h>
-#include <WS2TCPip.h>
-#pragma comment(lib, "Ws2_32.lib")
-#include <windows.h>
+#ifdef _WIN32
+    #define _WIN32_WINNT 0x501
+    #include <WinSock2.h>
+    #include <WS2TCPip.h>
+    #pragma comment(lib, "Ws2_32.lib")
+    #include <windows.h>
+#else
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <netinet/tcp.h>
+    #include <unistd.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <arpa/inet.h>
+#endif
 
 #include "Network/ServerSessionData.hpp"
 #include "Network/ThreadPool.hpp"
 #include "Network/Address.hpp"
 #include "Network/Timer.hpp"
+
+
+#ifdef _WIN32
+    typedef int SockLen_t;
+    typedef SOCKADDR_IN SocketAddr_in;
+    typedef SOCKET Socket;
+    typedef u_long ka_prop_t;
+#else
+    typedef socklen_t SockLen_t;
+    typedef struct sockaddr_in SocketAddr_in;
+    typedef int Socket;
+    typedef int ka_prop_t;
+#endif
+
+#ifdef _WIN32
+    #define WIN(exp) exp
+    #define NIX(exp)
+#else
+    #define WIN(exp)
+    #define NIX(exp) exp
+#endif
 
 
 std::string net::default_server_request_handler(TCPServer* server, std::string request)
@@ -34,69 +65,48 @@ net::TCPServer::TCPServer()
 net::TCPServer::~TCPServer()
 {
     stop();
-    closesocket(this->listen_socket);
-    WSACleanup();
+    WIN(
+        closesocket(this->listen_socket);
+        WSACleanup();
+    )
+    NIX(close(this->listen_socket);)
 }
 
 
-int net::TCPServer::init(Address address)
+int net::TCPServer::init(int port)
 {
     if (inited)
         return 1;
 
-    WSADATA wsaData;
-    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != 0) {
-        std::cerr << "WSAStartup failed: " << result << "\n";
-        return result;
-    }
+    WIN(
+        WSADATA wsaData;
+        int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (result != 0) {
+            std::cerr << "WSAStartup failed: " << result << "\n";
+            return result;
+        }
+    )
 
-    struct addrinfo hints;
-    ZeroMemory(&hints, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-    hints.ai_flags = AI_PASSIVE;
-
-    addrinfo *addr;
-    self_address = address;
-    result = getaddrinfo(self_address.ip.toString().c_str(), std::to_string(self_address.port).c_str(), &hints, &addr);
-
-    if (result != 0) {
-        std::cerr << "getaddrinfo failed: " << result << "\n";
-        WSACleanup(); // выгрузка библиотеки Ws2_32.dll
-        return 1;
-    }
+    SocketAddr_in addr;
+    addr.sin_addr
+        WIN(.S_un.S_addr)NIX(.s_addr) = INADDR_ANY;
+    addr.sin_port = htons(port);
+    addr.sin_family = AF_INET;
 
     this->listen_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (this->listen_socket == INVALID_SOCKET) {
-        std::cerr << "Error at socket: " << WSAGetLastError() << "\n";
-        freeaddrinfo(addr);
-        WSACleanup();
-        return 1;
-    }
+    if (this->listen_socket WIN(== INVALID_SOCKET)NIX(== -1))
+        return 2;
 
-    if (bind(this->listen_socket, addr->ai_addr, (int)addr->ai_addrlen) == SOCKET_ERROR) {
-        std::cerr << "bind failed with error: " << WSAGetLastError() << "\n";
-        closesocket(this->listen_socket);
-        WSACleanup();
-        return 1;
-    }
+    int flag = true;
+    if ((setsockopt(this->listen_socket, SOL_SOCKET, SO_REUSEADDR, WIN((char*))&flag, sizeof(flag)) == -1) ||
+        (bind(this->listen_socket, (struct sockaddr*)&addr, sizeof(addr)) WIN(== INVALID_SOCKET)NIX(== -1)))
+        return 3;
 
-    if (listen(this->listen_socket, SOMAXCONN) == SOCKET_ERROR) {
-        std::cerr << "listen failed with error: " << WSAGetLastError() << "\n";
-        closesocket(this->listen_socket);
-        WSACleanup();
-        return 1;
-    }
+    if (listen(this->listen_socket, SOMAXCONN) WIN(== SOCKET_ERROR)NIX(< 0))
+        return 4;
 
     inited = true;
     return 0;
-}
-
-int net::TCPServer::init(int port) //for 0.0.0.0
-{
-    return init(Address(IP(0, 0, 0, 0), port));
 }
 
 bool net::TCPServer::start()
@@ -128,12 +138,6 @@ void net::TCPServer::setRequestHandler(std::string (*new_request_handler)(TCPSer
 }
 
 
-net::Address net::TCPServer::getSelfAddress()
-{
-    return self_address;
-}
-
-
 bool net::TCPServer::hasNewSessionData()
 {
    return last_requested_session_data < session_data_counter;
@@ -158,7 +162,7 @@ void net::TCPServer::listen_handler()
     {
         FD_ZERO(&read_s);
         FD_SET(this->listen_socket, &read_s);
-        int select_result = select(0, &read_s, NULL, NULL, NULL);
+        int select_result = select(this->listen_socket + 1, &read_s, NULL, NULL, NULL);
         if (select_result > 0)
         {
             int client_socket = accept(this->listen_socket, NULL, NULL);
@@ -173,12 +177,15 @@ void net::TCPServer::client_handler(int client_socket)
     fd_set read_s;
     timeval time_out;
     time_out.tv_sec = 5;
+    time_out.tv_usec = 0;
     FD_ZERO(&read_s);
     FD_SET(client_socket, &read_s);
-    if (select(0, &read_s, NULL, NULL, &time_out) > 0)
+    if (select(client_socket + 1, &read_s, NULL, NULL, &time_out) > 0)
     {
-        u_long mode = 1; //1 для неблокирующего режима
-        ioctlsocket(client_socket, FIONBIO, &mode);
+        WIN(
+            u_long mode = 1; //1 для неблокирующего режима
+            ioctlsocket(client_socket, FIONBIO, &mode);
+        )
 
         const int max_client_buffer_size = 1024;
         char buf[max_client_buffer_size];
@@ -187,7 +194,7 @@ void net::TCPServer::client_handler(int client_socket)
         std::string request;
 
         int recv_result = 0;
-        while ((recv_result = recv(client_socket, buf, max_client_buffer_size, 0)) > 0)
+        while ((recv_result = recv(client_socket, buf, max_client_buffer_size, WIN(0)NIX(MSG_DONTWAIT))) > 0)
         {
             request += buf;
             total_bytes += recv_result;
@@ -203,11 +210,13 @@ void net::TCPServer::client_handler(int client_socket)
             sessions_data.push(ServerSessionData(session_data_counter++, request, response));
             locker.unlock();
 
-            if (send_result == SOCKET_ERROR)
-                std::cerr << "send failed: " << WSAGetLastError() << "\n";
+            WIN(
+                if (send_result == SOCKET_ERROR)
+                    std::cerr << "send failed: " << WSAGetLastError() << "\n";
+            )
         }
     }
 
-    closesocket(client_socket);
+    WIN(closesocket)NIX(close)(client_socket);
     //std::cout << "Finish " << client_socket << std::endl;
 }

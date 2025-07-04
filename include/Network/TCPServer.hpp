@@ -24,14 +24,11 @@ namespace net
         TCPServer();
         ~TCPServer();
 
-        int init(Address address);
-        int init(int port); //for localhost
+        int init(int port);
         bool start();
         bool stop();
 
         void setRequestHandler(std::string (*new_request_handler)(TCPServer*, std::string));
-
-        Address getSelfAddress();
 
         bool hasNewSessionData();
         ServerSessionData getNextSessionData();
@@ -39,7 +36,6 @@ namespace net
     protected:
         bool inited, started;
         int listen_socket;
-        Address self_address;
         int session_data_counter, last_requested_session_data;
         std::queue<ServerSessionData> sessions_data;
         std::thread listen_handler_thread;
