@@ -194,11 +194,45 @@ void net::TCPServer::client_handler(int client_socket)
         std::string request;
 
         int recv_result = 0;
-        while ((recv_result = recv(client_socket, buf, max_client_buffer_size, WIN(0)NIX(MSG_DONTWAIT))) > 0)
+        int content_length = -1;
+        while ((recv_result = recv(client_socket, buf, max_client_buffer_size, WIN(0)NIX(MSG_DONTWAIT))) != 0)
         {
-            request += buf;
-            total_bytes += recv_result;
-            request.resize(total_bytes);
+            if (recv_result > -1)
+            {
+                request += buf;
+                total_bytes += recv_result;
+                request.resize(total_bytes);
+            }
+            else
+            {
+                if (content_length == -1)
+                {
+                    int field_end = request.find("Content-Length:");
+                    if (field_end == std::string::npos)
+                        content_length = 0;
+                    else
+                    {
+                        field_end += 15;
+                        try 
+                        {
+                            int number_end = request.find("\r\n", field_end);
+                            if (number_end != std::string::npos)
+                                content_length = stoi(request.substr(field_end, number_end - field_end));
+                        }catch(...){}
+                    }
+                }
+                else if (content_length == 0)
+                {
+                    int end_i = request.find("\r\n\r\n");
+                    if (end_i != std::string::npos)
+                        break;
+                }
+                else
+                {
+                    if (content_length <= (request.size() - request.find("\r\n\r\n") - 4))
+                        break;
+                }
+            }
         }
 
         if (total_bytes > 0)
