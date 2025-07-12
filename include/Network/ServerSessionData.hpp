@@ -9,16 +9,24 @@ namespace net
 	class ServerSessionData
 	{
 	public:
+		enum Type
+		{
+			REQUEST,
+			RESPONSE
+		};
 		ServerSessionData();
-		ServerSessionData(int id, std::string request, std::string response);
+		ServerSessionData(int id, Type type, float time, std::string text);
 
 		int getId();
-		std::string getRequest();
-		std::string getResponse();
+		Type getType();
+		float getTime();
+		std::string getText();
 
 	protected:
 		int id;
-		std::string request, response;
+		Type type;
+		float time;
+		std::string text;
 	};
 }
 

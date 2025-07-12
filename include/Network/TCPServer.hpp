@@ -36,7 +36,7 @@ namespace net
     protected:
         bool inited, started;
         int listen_socket;
-        int session_data_counter, last_requested_session_data;
+        int session_data_counter;
         std::queue<ServerSessionData> sessions_data;
         std::thread listen_handler_thread;
         ThreadPool listen_pool;

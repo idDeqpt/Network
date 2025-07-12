@@ -56,7 +56,6 @@ std::string net::default_server_request_handler(TCPServer* server, std::string r
 
 net::TCPServer::TCPServer()
 {
-    last_requested_session_data = 0;
     session_data_counter = 0;
     inited = false;
     started = false;
@@ -140,14 +139,16 @@ void net::TCPServer::setRequestHandler(std::string (*new_request_handler)(TCPSer
 
 bool net::TCPServer::hasNewSessionData()
 {
-   return last_requested_session_data < session_data_counter;
+   return !sessions_data.empty();
 }
 
 net::ServerSessionData net::TCPServer::getNextSessionData()
 {
-    last_requested_session_data++;
     std::unique_lock<std::mutex> locker(session_data_mtx);
-    ServerSessionData data = (!sessions_data.empty()) ? sessions_data.front() : ServerSessionData();
+    if (sessions_data.empty())
+        return ServerSessionData();
+
+    ServerSessionData data = sessions_data.front();
     sessions_data.pop();
     locker.unlock();
     return data;
@@ -237,11 +238,16 @@ void net::TCPServer::client_handler(int client_socket)
 
         if (total_bytes > 0)
         {
+            std::unique_lock<std::mutex> locker(session_data_mtx);
+            int current_id = session_data_counter++;
+            sessions_data.push(ServerSessionData(current_id, ServerSessionData::Type::REQUEST, Timer::getAppTime(), request));
+            locker.unlock();
+
             std::string response = request_handler(this, request);
             int send_result = send(client_socket, response.c_str(), response.length(), 0);
             
-            std::unique_lock<std::mutex> locker(session_data_mtx);
-            sessions_data.push(ServerSessionData(session_data_counter++, request, response));
+            locker.lock();
+            sessions_data.push(ServerSessionData(current_id, ServerSessionData::Type::RESPONSE, Timer::getAppTime(), response));
             locker.unlock();
 
             WIN(
