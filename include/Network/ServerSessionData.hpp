@@ -11,8 +11,10 @@ namespace net
 	public:
 		enum Type
 		{
-			REQUEST,
-			RESPONSE
+			OPEN,
+			CLOSE,
+			RECV,
+			SEND
 		};
 		ServerSessionData();
 		ServerSessionData(int id, Type type, float time, std::string text);

@@ -6,7 +6,7 @@
 net::ServerSessionData::ServerSessionData()
 {
 	id = -1;
-	type = Type::REQUEST;
+	type = Type::OPEN;
 	time = 0;
 	text = "";
 }

@@ -1,6 +1,7 @@
 #ifndef NETWORK_TCP_SERVER
 #define NETWORK_TCP_SERVER
 
+#include <unordered_map>
 #include <string>
 #include <thread>
 #include <vector>
@@ -38,6 +39,7 @@ namespace net
         int listen_socket;
         int session_data_counter;
         std::queue<ServerSessionData> sessions_data;
+        std::unordered_map<int, int> client_id_table;
         std::thread listen_handler_thread;
         ThreadPool listen_pool;
         std::mutex session_data_mtx;
@@ -46,6 +48,9 @@ namespace net
         void initSelfAddress(int port);
         void listen_handler();
         virtual void client_handler(int client_socket);
+
+        std::string recv(int socket);
+        void send(int socket, const std::string& message);
     };
 }
 
