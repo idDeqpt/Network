@@ -51,11 +51,11 @@
 #endif
 
 
-std::string net::default_server_request_handler(TCPServer* server, std::string request)
+void net::default_server_request_handler(TCPServer* server, int client_socket)
 {
-	std::string response = "Response: " + request;
+	std::string response = "Response: " + server->recv(client_socket);
 
-	return response;
+	server->send(client_socket, response);
 }
 
 
@@ -136,7 +136,7 @@ bool net::TCPServer::stop()
 }
 
 
-void net::TCPServer::setRequestHandler(std::string (*new_request_handler)(TCPServer* server, std::string request))
+void net::TCPServer::setRequestHandler(void (*new_request_handler)(TCPServer*, int))
 {
 	request_handler = new_request_handler;
 }
@@ -158,63 +158,6 @@ net::ServerSessionData net::TCPServer::getNextSessionData()
 	locker.unlock();
 	return data;
 }
-
-
-
-void net::TCPServer::listen_handler()
-{
-	fd_set read_s;
-	while (started)
-	{
-		FD_ZERO(&read_s);
-		FD_SET(this->listen_socket, &read_s);
-		int select_result = select(this->listen_socket + 1, &read_s, NULL, NULL, NULL);
-		if (select_result > 0)
-		{
-			int client_socket = accept(this->listen_socket, NULL, NULL);
-			listen_pool.addTask(&TCPServer::client_handler, this, client_socket);
-		}
-	}
-}
-
-void net::TCPServer::client_handler(int client_socket)
-{
-	int current_id = session_data_counter++;
-	fd_set read_s;
-	timeval time_out;
-	time_out.tv_sec = 5;
-	time_out.tv_usec = 0;
-	FD_ZERO(&read_s);
-	FD_SET(client_socket, &read_s);
-	if (select(client_socket + 1, &read_s, NULL, NULL, &time_out) > 0)
-	{
-		std::unique_lock<std::mutex> locker(session_data_mtx);
-		sessions_data.push(ServerSessionData(current_id, ServerSessionData::Type::OPEN, Timer::getAppTime(), ""));
-		client_id_table[client_socket] = current_id;
-		locker.unlock();
-
-		WIN(
-			u_long mode = 1; //1 для неблокирующего режима
-			ioctlsocket(client_socket, FIONBIO, &mode);
-		)
-
-		std::string request = this->recv(client_socket);
-
-		if (request.size())
-		{
-			std::string response = request_handler(this, request);
-			this->send(client_socket, response);
-		}
-	}
-
-	WIN(closesocket)NIX(close)(client_socket);
-
-	std::unique_lock<std::mutex> locker(session_data_mtx);
-	sessions_data.push(ServerSessionData(current_id, ServerSessionData::Type::CLOSE, Timer::getAppTime(), ""));
-	client_id_table.erase(client_socket);
-	locker.unlock();
-}
-
 
 
 std::string net::TCPServer::recv(int socket)
@@ -280,5 +223,55 @@ void net::TCPServer::send(int socket, const std::string& message)
 
 	std::unique_lock<std::mutex> locker(session_data_mtx);
 	sessions_data.push(ServerSessionData(client_id_table[socket], ServerSessionData::Type::SEND, Timer::getAppTime(), message));
+	locker.unlock();
+}
+
+
+
+void net::TCPServer::listen_handler()
+{
+	fd_set read_s;
+	while (started)
+	{
+		FD_ZERO(&read_s);
+		FD_SET(this->listen_socket, &read_s);
+		int select_result = select(this->listen_socket + 1, &read_s, NULL, NULL, NULL);
+		if (select_result > 0)
+		{
+			int client_socket = accept(this->listen_socket, NULL, NULL);
+			listen_pool.addTask(&TCPServer::client_handler, this, client_socket);
+		}
+	}
+}
+
+void net::TCPServer::client_handler(int client_socket)
+{
+	int current_id = session_data_counter++;
+	fd_set read_s;
+	timeval time_out;
+	time_out.tv_sec = 5;
+	time_out.tv_usec = 0;
+	FD_ZERO(&read_s);
+	FD_SET(client_socket, &read_s);
+	if (select(client_socket + 1, &read_s, NULL, NULL, &time_out) > 0)
+	{
+		std::unique_lock<std::mutex> locker(session_data_mtx);
+		sessions_data.push(ServerSessionData(current_id, ServerSessionData::Type::OPEN, Timer::getAppTime(), ""));
+		client_id_table[client_socket] = current_id;
+		locker.unlock();
+
+		WIN(
+			u_long mode = 1; //1 для неблокирующего режима
+			ioctlsocket(client_socket, FIONBIO, &mode);
+		)
+
+		request_handler(this, client_socket);
+	}
+
+	WIN(closesocket)NIX(close)(client_socket);
+
+	std::unique_lock<std::mutex> locker(session_data_mtx);
+	sessions_data.push(ServerSessionData(current_id, ServerSessionData::Type::CLOSE, Timer::getAppTime(), ""));
+	client_id_table.erase(client_socket);
 	locker.unlock();
 }

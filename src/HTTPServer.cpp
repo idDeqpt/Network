@@ -25,17 +25,20 @@ net::HTTPResponse net::default_404_handler()
     return response;
 }
 
-std::string net::default_http_handler(TCPServer* server, std::string request)
+void net::default_http_handler(TCPServer* server, int client_socket)
 {
-    HTTPRequest req(request);
+    HTTPRequest req(server->recv(client_socket));
     URI uri(req.start_line[1]);
     std::string path = uri.toString(false);
 
     HTTPServer* http_server = dynamic_cast<HTTPServer*>(server);
     if (http_server->getHandlersPtr().count(path) == 0)
-        return http_server->get404Handler()().toString();
+    {
+        server->send(client_socket, http_server->get404Handler()().toString());
+        return;
+    }
 
-    return http_server->getHandlersPtr()[path](req).toString();
+    server->send(client_socket, http_server->getHandlersPtr()[path](req).toString());
 }
 
 

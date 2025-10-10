@@ -10,7 +10,7 @@ namespace net
     class HTTPServer;
 
     HTTPResponse default_404_handler();
-    std::string default_http_handler(TCPServer*, std::string);
+    void default_http_handler(TCPServer*, int client_socket);
 
     class HTTPServer : public TCPServer
     {

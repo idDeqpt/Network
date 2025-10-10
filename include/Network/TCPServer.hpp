@@ -17,7 +17,7 @@ namespace net
 {
     class TCPServer;
 
-    std::string default_server_request_handler(TCPServer*, std::string request);
+    void default_server_request_handler(TCPServer*, int client_socket);
 
     class TCPServer
     {
@@ -29,10 +29,13 @@ namespace net
         bool start();
         bool stop();
 
-        void setRequestHandler(std::string (*new_request_handler)(TCPServer*, std::string));
+        void setRequestHandler(void (*new_request_handler)(TCPServer*, int));
 
         bool hasNewSessionData();
         ServerSessionData getNextSessionData();
+
+        std::string recv(int socket);
+        void send(int socket, const std::string& message);
 
     protected:
         bool inited, started;
@@ -43,14 +46,11 @@ namespace net
         std::thread listen_handler_thread;
         ThreadPool listen_pool;
         std::mutex session_data_mtx;
-        std::string (*request_handler)(TCPServer*, std::string) = default_server_request_handler;
+        void (*request_handler)(TCPServer*, int) = default_server_request_handler;
 
         void initSelfAddress(int port);
         void listen_handler();
         virtual void client_handler(int client_socket);
-
-        std::string recv(int socket);
-        void send(int socket, const std::string& message);
     };
 }
 
