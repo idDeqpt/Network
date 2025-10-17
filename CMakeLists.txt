@@ -3,18 +3,16 @@ cmake_minimum_required(VERSION 3.5.0)
 set(PROJECT_NAME network)
 
 project(${PROJECT_NAME} CXX)
-include_directories("./include")
 
 set(SOURCE_LIB
 	src/Address.cpp
 	src/HTTP.cpp
 	src/HTTPRequests.cpp
-	src/HTTPServer.cpp
 	src/ServerSessionData.cpp
 	src/TCPClient.cpp
 	src/TCPServer.cpp
 	src/URL.cpp
-	src/Timer.cpp)       
+	src/Timer.cpp)
 
 # Включение экспорта всех символов для создания динамической библиотеки
 set (CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -22,6 +20,7 @@ set (CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 # Создание динамической библиотеки с именем ${PROJECT_NAME}
 add_library(${PROJECT_NAME} SHARED ${SOURCE_LIB})
 
+target_include_directories(${PROJECT_NAME} PRIVATE "./include")
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 set(dir ${CMAKE_CURRENT_SOURCE_DIR}/bin/)
