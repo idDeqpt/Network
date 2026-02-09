@@ -2,34 +2,100 @@ cmake_minimum_required(VERSION 3.5.0)
 
 set(PROJECT_NAME network)
 
-project(${PROJECT_NAME} CXX)
+project(${PROJECT_NAME}
+    VERSION 1.0.0
+    LANGUAGES CXX
+)
 
-set(SOURCE_LIB
-	src/Address.cpp
-	src/HTTP.cpp
-	src/HTTPRequests.cpp
-	src/ServerSessionData.cpp
-	src/TCPClient.cpp
-	src/TCPServer.cpp
-	src/URL.cpp
-	src/Timer.cpp)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-# Включение экспорта всех символов для создания динамической библиотеки
-set (CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+option(BUILD_SHARED_LIBS "Build shared library" ON)
+option(Network_BUILD_TESTS "Build tests" OFF)
 
-# Создание динамической библиотеки с именем ${PROJECT_NAME}
-add_library(${PROJECT_NAME} SHARED ${SOURCE_LIB})
+set(PUBLIC_HEADER
+    include/Network/Address.hpp
+    include/Network/HTTP.hpp
+    include/Network/HTTPRequests.hpp
+    include/Network/ServerSessionData.hpp
+    include/Network/TCPClient.hpp
+    include/Network/TCPServer.hpp
+    include/Network/URL.hpp
+    include/Network/Timer.hpp
+    include/Network/ThreadPool.hpp)
 
-target_include_directories(${PROJECT_NAME} PRIVATE "./include")
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+set(SOURCE_FILES
+    src/Address.cpp
+    src/HTTP.cpp
+    src/HTTPRequests.cpp
+    src/ServerSessionData.cpp
+    src/TCPClient.cpp
+    src/TCPServer.cpp
+    src/URL.cpp
+    src/Timer.cpp)
 
-set(dir ${CMAKE_CURRENT_SOURCE_DIR}/bin/)
-set(EXECUTABLE_OUTPUT_PATH ${dir} CACHE PATH "Build directory" FORCE)
-set(LIBRARY_OUTPUT_PATH ${dir} CACHE PATH "Build directory" FORCE)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${dir})
-set(CMAKE_BUILD_FILES_DIRECTORY ${dir})
-set(CMAKE_BUILD_DIRECTORY ${dir})
-set(CMAKE_BINARY_DIR  ${dir})
-SET(EXECUTABLE_OUTPUT_PATH ${dir})
-SET(LIBRARY_OUTPUT_PATH ${dir}lib)
-SET(CMAKE_CACHEFILE_DIR ${dir})
+if (BUILD_SHARED_LIBS)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
+else()
+    add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
+endif()
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    EXPORT_NAME Network
+)
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetworkConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/NetworkConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Network
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/NetworkConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+install(
+    TARGETS ${PROJECT_NAME}
+    EXPORT NetworkTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+    DIRECTORY include/Network
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+    EXPORT NetworkTargets
+    FILE NetworkTargets.cmake
+    NAMESPACE Network::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Network
+)
+
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/NetworkConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/NetworkConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Network
+)
+
+export(
+    EXPORT NetworkTargets
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/NetworkTargets.cmake"
+    NAMESPACE Network::
+)
