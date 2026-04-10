@@ -31,6 +31,7 @@ public:
 	~ThreadPool()
 	{
 		process = false;
+		tasks_cv.notify_all();
 		for (unsigned int i = 0; i < threads.size(); i++)
 			threads[i].join();
 	}
@@ -38,12 +39,10 @@ public:
 	template <typename Function, typename ...Args>
 	unsigned int addTask(const Function& task_func, Args&&... args)
 	{
+		std::lock_guard<std::mutex> lock(mtx);
 		unsigned int task_id = tasks_total_number++;
-		{
-			std::lock_guard<std::mutex> lock(mtx);
-			tasks.emplace(std::async(std::launch::deferred, task_func, args...), task_id);
-			tasks_cv.notify_one();
-		}
+		tasks.emplace(std::async(std::launch::deferred, task_func, args...), task_id);
+		tasks_cv.notify_one();
 
 		return task_id;
 	}
@@ -62,7 +61,6 @@ protected:
 		{
 			std::unique_lock<std::mutex> locker(mtx);
 			tasks_cv.wait(locker, [this] {return !tasks.empty() || !process;});
-			std::this_thread::sleep_for(std::chrono::microseconds(10)); //без этого не работает
 
 			if (!tasks.empty())
 			{
