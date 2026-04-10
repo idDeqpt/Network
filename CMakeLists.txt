@@ -10,7 +10,7 @@ project(${PROJECT_NAME}
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-option(BUILD_SHARED_LIBS "Build shared library" ON)
+option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(Network_BUILD_TESTS "Build tests" OFF)
 
 set(PUBLIC_HEADER
