@@ -15,43 +15,41 @@
 
 namespace net
 {
-    class TCPServer;
+	class TCPServer
+	{
+	public:
+		TCPServer();
+		~TCPServer();
 
-    void default_server_request_handler(TCPServer*, int client_socket);
+		int init(int port);
+		bool start();
+		bool stop();
 
-    class TCPServer
-    {
-    public:
-        TCPServer();
-        ~TCPServer();
+		bool hasNewSessionData();
+		ServerSessionData getNextSessionData();
 
-        int init(int port);
-        bool start();
-        bool stop();
+		std::string recv(int socket);
+		void send(int socket, const std::string& message);
 
-        void setRequestHandler(void (*new_request_handler)(TCPServer*, int));
+	protected:
+		bool inited, started;
+		int listen_socket;
+		int session_data_counter;
+		std::queue<ServerSessionData> sessions_data;
+		std::unordered_map<int, int> client_id_table;
+		std::thread listen_handler_thread;
+		ThreadPool listen_pool;
+		std::mutex session_data_mtx;
 
-        bool hasNewSessionData();
-        ServerSessionData getNextSessionData();
+		void initSelfAddress(int port);
+		void listen_handler();
 
-        std::string recv(int socket);
-        void send(int socket, const std::string& message);
+		virtual void client_handler(int client_socket);
+		virtual void request_handler(int client_socket);
 
-    protected:
-        bool inited, started;
-        int listen_socket;
-        int session_data_counter;
-        std::queue<ServerSessionData> sessions_data;
-        std::unordered_map<int, int> client_id_table;
-        std::thread listen_handler_thread;
-        ThreadPool listen_pool;
-        std::mutex session_data_mtx;
-        void (*request_handler)(TCPServer*, int) = default_server_request_handler;
-
-        void initSelfAddress(int port);
-        void listen_handler();
-        virtual void client_handler(int client_socket);
-    };
+		virtual std::string recv_handler(int socket);
+		virtual void send_handler(int socket, const std::string& message);
+	};
 }
 
 #endif //NETWORK_TCP_SERVER
