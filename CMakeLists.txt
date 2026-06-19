@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.14)
 
 set(PROJECT_NAME network)
 
@@ -7,22 +7,26 @@ project(${PROJECT_NAME}
     LANGUAGES CXX
 )
 
+include(FetchContent)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(Network_BUILD_TESTS "Build tests" OFF)
 
-set(PUBLIC_HEADER
-    include/Network/Address.hpp
-    include/Network/HTTP.hpp
-    include/Network/HTTPRequests.hpp
-    include/Network/ServerSessionData.hpp
-    include/Network/TCPClient.hpp
-    include/Network/TCPServer.hpp
-    include/Network/URL.hpp
-    include/Network/Timer.hpp
-    include/Network/ThreadPool.hpp)
+
+set(WOLFSSL_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(WOLFSSL_TESTS    OFF CACHE BOOL "" FORCE)
+set(WOLFSSL_OLD_TLS  OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    wolfssl
+    GIT_REPOSITORY "https://github.com/wolfSSL/wolfssl"
+    GIT_TAG v5.9.1-stable
+    GIT_SHALLOW TRUE
+)
+
+FetchContent_MakeAvailable(wolfssl)
 
 set(SOURCE_FILES
     src/Address.cpp
@@ -32,6 +36,8 @@ set(SOURCE_FILES
     src/TCPClient.cpp
     src/TCPServer.cpp
     src/URL.cpp
+    src/WebServer.cpp
+    src/WebServerSecure.cpp
     src/Timer.cpp)
 
 if (BUILD_SHARED_LIBS)
@@ -40,6 +46,8 @@ if (BUILD_SHARED_LIBS)
 else()
     add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
 endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE wolfssl)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC 
