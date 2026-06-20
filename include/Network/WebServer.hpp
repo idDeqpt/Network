@@ -16,7 +16,7 @@ namespace net
 		std::string  m_resources_directory;
 
 		virtual void request_handler(int client_socket) override;
-		void session_handler(int client_socket);
+		virtual void session_handler(int client_socket);
 	};
 }
 
