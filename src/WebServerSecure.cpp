@@ -4,6 +4,9 @@
 
 #include <unordered_map>
 #include <string>
+#include <iostream>
+#include <chrono>
+#include <thread>
 
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
@@ -83,7 +86,13 @@ void WebServerSecure::request_handler(int client_socket)
 		return;
 	}
 
-	session_handler(client_socket);
+	connection_handler(client_socket);
+
+	int shutdown_ret;
+	do
+	{
+		shutdown_ret = wolfSSL_shutdown(ssl);
+	} while (shutdown_ret == 0 || shutdown_ret == 2);
 
 	wolfSSL_free(ssl);
 	m_ssl_map.erase(client_socket);
@@ -92,38 +101,38 @@ void WebServerSecure::request_handler(int client_socket)
 
 std::string WebServerSecure::recv_handler(int socket)
 {
-    auto it = m_ssl_map.find(socket);
-    if (it == m_ssl_map.end())
-    {
-        std::cerr << "No SSL object for socket " << socket << std::endl;
-        return "";
-    }
-    WOLFSSL* ssl = it->second;
+	auto it = m_ssl_map.find(socket);
+	if (it == m_ssl_map.end())
+	{
+		std::cerr << "No SSL object for socket " << socket << std::endl;
+		return "";
+	}
+	WOLFSSL* ssl = it->second;
 
-    static constexpr int max_buffer = 1024;
-    char buf[max_buffer];
-    std::string result;
-    int content_length = -1;
+	static constexpr int max_buffer = 1024;
+	char buf[max_buffer];
+	std::string result;
+	int content_length = -1;
 
-    while (true)
-    {
-        int n = wolfSSL_read(ssl, buf, max_buffer);
-        if (n > 0)
-        {
-            result.append(buf, n);
-            if (is_request_complete(result, content_length))
-                break;
-        }
-        else if (n == 0)
-            break;
-        else
-        {
-            int err = wolfSSL_get_error(ssl, n);
-            std::cerr << "wolfSSL_read error: " << err << std::endl;
-            return "";
-        }
-    }
-    return result;
+	while (true)
+	{
+		int n = wolfSSL_read(ssl, buf, max_buffer);
+		if (n > 0)
+		{
+			result.append(buf, n);
+			if (is_request_complete(result, content_length))
+				break;
+		}
+		else if (n == 0)
+			break;
+		else
+		{
+			int err = wolfSSL_get_error(ssl, n);
+			std::cerr << "wolfSSL_read error: " << err << std::endl;
+			return "";
+		}
+	}
+	return result;
 }
 
 void WebServerSecure::send_handler(int socket, const std::string& message)

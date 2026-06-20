@@ -37,14 +37,28 @@ WebServer::WebServer(const std::string& res_dir):
 
 void WebServer::request_handler(int client_socket)
 {
-	session_handler(client_socket);
+	connection_handler(client_socket);
 }
 
-void WebServer::session_handler(int client_socket)
+void WebServer::connection_handler(int client_socket)
+{
+	while (true)
+	{
+		std::string raw_request = this->recv(client_socket);
+		if (raw_request.empty()) break;
+
+		net::HTTPRequest request(raw_request);
+		session_handler(request, client_socket);
+		
+		auto it = request.headers.find("Connection");
+		if ((it != request.headers.end()) && (it->second == "close")) break;
+	}
+}
+
+void WebServer::session_handler(net::HTTPRequest request, int client_socket)
 {
 	net::HTTPResponse response;
-	net::HTTPRequest req(this->recv(client_socket));
-	net::URI uri(req.start_line[1]);
+	net::URI uri(request.start_line[1]);
 	std::string path = uri.toString(false);
 
 	if (path.find(".") == std::string::npos)
@@ -53,16 +67,16 @@ void WebServer::session_handler(int client_socket)
 		path += (last_char == '/') ? "index.html" : "/index.html";
 	}
 
-	if (req.headers.find("Range") == req.headers.end())
+	if (request.headers.find("Range") == request.headers.end())
 		if (get_file_size(m_resources_directory + path) < 1024*1024*100) //100MB
 			full_file_load_handler(response, m_resources_directory, path);
 		else
 		{
-			req.headers["Range"] = "bytes=0-";
-			range_file_load_handler(req, response, m_resources_directory, path);
+			request.headers["Range"] = "bytes=0-";
+			range_file_load_handler(request, response, m_resources_directory, path);
 		}
 	else
-		range_file_load_handler(req, response, m_resources_directory, path);
+		range_file_load_handler(request, response, m_resources_directory, path);
 
 	
 	response.start_line[0] = "HTTP/1.1";

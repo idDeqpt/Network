@@ -2,6 +2,8 @@
 #define NETWORK_WEB_SERVER_CLASS_HEADER
 
 #include <Network/TCPServer.hpp>
+#include <Network/HTTP.hpp>
+
 #include <string>
 
 namespace net
@@ -16,7 +18,8 @@ namespace net
 		std::string  m_resources_directory;
 
 		virtual void request_handler(int client_socket) override;
-		virtual void session_handler(int client_socket);
+		virtual void connection_handler(int client_socket);
+		virtual void session_handler(net::HTTPRequest request, int client_socket);
 	};
 }
 
